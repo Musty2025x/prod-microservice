@@ -3,7 +3,8 @@ name: Deploy to ECS
 on:
   push:
     branches:
-      - main
+      - master
+  workflow_dispatch:          # ✅ enables manual "Run workflow" button in GitHub UI
 
 permissions:
   id-token: write
@@ -14,6 +15,7 @@ env:
   ECR_REPOSITORY: prod-microservice
   ECS_CLUSTER: prod-microservice-cluster
   ECS_SERVICE: prod-microservice-service
+  ECR_REGISTRY: 251894223238.dkr.ecr.us-east-1.amazonaws.com  # ✅ defined once, reused everywhere
 
 jobs:
   deploy:
@@ -32,25 +34,32 @@ jobs:
       - name: Login to ECR
         run: |
           aws ecr get-login-password --region $AWS_REGION | \
-          docker login --username AWS --password-stdin \
-          251894223238.dkr.ecr.us-east-1.amazonaws.com
+          docker login --username AWS --password-stdin $ECR_REGISTRY
 
       - name: Build Docker image
         run: |
-          docker build -t $ECR_REPOSITORY:${{ github.sha }} ./microservice
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} ./microservice
           docker tag \
-          $ECR_REPOSITORY:${{ github.sha }} \
-          251894223238.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPOSITORY:${{ github.sha }}
-
+            $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} \
+            $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
       - name: Push Docker image
         run: |
-          docker push \
-          251894223238.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPOSITORY:${{ github.sha }}
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest   # ✅ also push latest tag
 
       - name: Force new ECS deployment
         run: |
           aws ecs update-service \
             --cluster $ECS_CLUSTER \
             --service $ECS_SERVICE \
-            --force-new-deployment
+            --force-new-deployment \
+            --region $AWS_REGION
+
+      - name: Wait for ECS deployment to complete  # ✅ waits and confirms deployment succeeded
+        run: |
+          aws ecs wait services-stable \
+            --cluster $ECS_CLUSTER \
+            --services $ECS_SERVICE \
+            --region $AWS_REGION
+          echo "✅ Deployment complete!"

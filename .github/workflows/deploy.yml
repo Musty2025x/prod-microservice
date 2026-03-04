@@ -15,7 +15,7 @@ env:
   ECR_REPOSITORY: prod-microservice
   ECS_CLUSTER: prod-microservice-cluster
   ECS_SERVICE: prod-microservice-service
-  ECR_REGISTRY: 251894223238.dkr.ecr.us-east-1.amazonaws.com  # ✅ defined once, reused everywhere
+  ECR_REGISTRY: 168377603278.dkr.ecr.us-east-1.amazonaws.com  # ✅ defined once, reused everywhere
 
 jobs:
   deploy:

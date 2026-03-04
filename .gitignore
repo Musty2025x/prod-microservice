@@ -1,0 +1,30 @@
+# Terraform
+.terraform/
+.terraform
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+
+# Local state backups
+terraform.tfstate.old
+terraform.tfstate.backup.old
+
+# Environment files
+*.env
+.env
+
+# Node
+node_modules/
+npm-debug.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+infra/.docker/
